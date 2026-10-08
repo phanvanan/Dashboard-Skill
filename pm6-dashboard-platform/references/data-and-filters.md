@@ -94,3 +94,60 @@ Options từ nhiều nguồn và mapping không phải tính năng join measure.
 - `eq` với numeric 0 bị query builder chuyển thành chuỗi rỗng; `between [0,100]` có thể mất biên 0. Một request tự xây đúng phải giữ `"0"`, nhưng sửa request đơn lẻ không bảo đảm các request UI tương lai không tái lỗi. Kiểm query thực sau tương tác.
 - Hai cột khác tên giữa nguồn không tự liên thông. Resolve không được cột có nhánh bỏ điều kiện, khiến một chart trông như không phản ứng.
 - Khi kiểm filter, đối chiếu ba thứ: selection UI, request/backend hoặc dataset thực, và giá trị chart. Nhìn label slicer chưa đủ.
+
+## Nối slicer với widget (quan sát live)
+
+Đã kiểm trên deployment thật, skill 1.1.0. Một slicer lọc được widget khi có **đủ cả bốn mảnh** sau:
+
+1. **ID dimension.** Có dạng `"<databaseId>_<tableName>::<column>"`. Chuỗi này đồng thời là `customFields[].id` của slicer, là phần tử trong `chartConfigs.xAxis` của slicer, và là key trong `layoutConfigs.dimensions`.
+2. **Ánh xạ trong `layoutConfigs.dimensions[id]`:**
+
+   ```json
+   {"mappings":[{"column":"Kỳ báo cáo","tableName":"TABLE_A","databaseId":"DB","labelColumn":"Kỳ báo cáo"},
+                {"column":"Kỳ báo cáo tháng","tableName":"TABLE_B","databaseId":"DB","labelColumn":"Kỳ báo cáo tháng"}],
+    "sourceKey":"DB_TABLE_A","dimensionId":"DB_TABLE_A::Kỳ báo cáo","dimensionName":"Kỳ báo cáo",
+    "legacyFieldKey":"Kỳ báo cáo","physicalColumn":"Kỳ báo cáo"}
+   ```
+
+   Widget dùng bảng khác chỉ phản ứng với slicer khi bảng đó có trong `mappings`. Đã kiểm: đổi kỳ ở slicer thì KPI của hai bảng khác cũng cập nhật.
+3. **Danh sách widget đích.** `formatConfig.slicer.targetWidgetIds` là **pageItem.id dạng chuỗi**. Widget mới chỉ có ID sau khi tạo trang, vì vậy: tạo trang trước, đọc ID, rồi cập nhật trang để gán target. Widget không có trong danh sách sẽ không bị lọc. Nên loại các biểu đồ xu hướng theo tháng ra khỏi danh sách để chúng luôn hiện đủ năm.
+4. **Trạng thái lọc ban đầu.** Mỗi widget đích lưu `chartConfigs.visualFilterValues = {"<dimensionId>":{"values":["Tháng 10"],"operator":"IN"}}`, và `metadata.filterDataList` tương ứng.
+
+Slicer combobox tối thiểu đã chạy:
+
+```json
+{"customFields":[{"id":"DB_TABLE_A::Kỳ báo cáo","label":"Kỳ báo cáo","comboSource":"multiTable","controlType":"combobox",
+  "comboSources":[{"tableName":"TABLE_A","databaseId":"DB","labelColumn":"Kỳ báo cáo","valueColumn":"Kỳ báo cáo"}],
+  "defaultValue":["Tháng 10"],"allowMultiple":false,"defaultOperator":"IN",
+  "comboLabelColumn":"Kỳ báo cáo","comboTargetColumn":["Kỳ báo cáo"]}],
+ "targetWidgetIds":["1001","1002"],"labelPosition":"left"}
+```
+
+Giá trị mặc định là **tĩnh**, nên khi có kỳ mới phải cập nhật lại. Cột kỳ dạng chữ ("Tháng 1"…"Tháng 10") khiến Top N hoặc sắp xếp theo chữ chọn sai: "Tháng 9" đứng sau "Tháng 10". Hãy nói rõ điều này với người dùng.
+
+## Bộ lọc cục bộ (quan sát live)
+
+Đoạn mã frontend áp `dataConfig.queryFilters` lên dòng dữ liệu (bundle của deployment, 2026-10-08) hoạt động như sau:
+
+| operator | Cách so sánh |
+| --- | --- |
+| `eq` / `neq` | So `String(row[field])` với `String(value)` |
+| `in` | Mảng giá trị đổi sang chuỗi, rồi so khớp đúng chuỗi |
+| `contains` | Không phân biệt hoa thường |
+| `gt` / `lt` | Ép sang số |
+| `top_largest` / `top_smallest` | Áp sau các lọc trên; `value` là N |
+
+Hệ quả, đã kiểm trên View:
+
+- `{"field":"Chủ đầu tư","operator":"neq","value":"null"}` loại được các dòng có giá trị null, vì `String(null)` là `"null"`. Dùng cách này để bỏ dòng nhóm hoặc dòng tổng khi chỉ dòng chi tiết có cột đó.
+- `{"field":"STT","operator":"in","value":["1","2","3"]}` chọn được các dòng STT nguyên, tức dòng nhóm lĩnh vực, và loại `1.1`, `1.2`…
+- `top_largest` / `top_smallest` với `value:"10"` hoạt động trên bar_horizontal.
+
+Điều chưa xác minh: những filter này có được gửi xuống backend thành `whereConditions` ở luồng tương tác hay không. Kiểm View sau mỗi lần cấu hình.
+
+**Bảng có dòng tổng hoặc dòng nhóm.** Nhiều output trộn dòng tổng, dòng nhóm và dòng chi tiết trong cùng một bảng. Phải xác định cột phân biệt các loại dòng **trước** khi chọn aggregate:
+
+- KPI dùng `mainFilters` để chọn dòng tổng.
+- Biểu đồ và bảng dùng `queryFilters` để chỉ giữ dòng chi tiết.
+
+Nếu không, kết quả sẽ bị cộng trùng.

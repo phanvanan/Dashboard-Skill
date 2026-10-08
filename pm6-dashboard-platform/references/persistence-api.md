@@ -129,8 +129,61 @@ Không retry mù POST tạo layout sau timeout: đọc/tìm lại kết quả b�
 Route frontend quan sát được (có thể có context prefix):
 
 - `/cau-hinh-layout` tạo, `/cau-hinh-layout/{id}` chỉnh.
-- `/v2/view-layout/{id}`, `/v1/view-layout/{id}` xem layout.
+- `/v2/view-layout/{id}`, `/v1/view-layout/{id}` xem layout trong mã nguồn đã khảo sát. Deployment live đã kiểm dùng `/view-layout/{id}` (xem mục quan sát live bên dưới).
 - `/view-layout-mobile/{id}` embed; cần cơ chế auth của host.
 - `/dashboard`, `/cau-hinh-dashboard`, `/view-dashboard/{id}` quản trị/cấu hình/xem portal.
 
 Portal monitoring-info có name, dashboardId, parentId, layoutId, priority, refreshTime, iconUrl, status. Liên kết layout vào portal là thao tác riêng; ưu tiên UI hoặc contract của deployment khi người dùng yêu cầu. Chia sẻ người/tổ chức, thay status và quyền là thao tác riêng ngoài “vẽ chart”.
+
+## Quan sát trên deployment live
+
+Các điểm dưới đây được kiểm trên một deployment PM6/IOC thật ngày 2026-10-08 (skill 1.1.0), bằng phiên trình duyệt đã đăng nhập. Đây là bằng chứng của **một** deployment, không phải hợp đồng chung: luôn thử nhẹ để xác nhận trước khi ghi.
+
+**Đường dẫn và xác thực**
+
+- Gateway thêm tiền tố `/api` trước tên service: `/api/data-hub-app/api/v1/...`, `/api/visualization-app/api/v1/...`. Gọi không có tiền tố thì bị chặn; gọi dưới context của ứng dụng (`/dash/...`) thì nhận về HTML.
+- Xác thực bằng `Authorization: Bearer <token>`. Token lấy từ localStorage của phiên đăng nhập (key dạng `ACCESS_TOKEN`) và chỉ dùng trong page context. Có lúc nhận 401 khi token hết hạn; ứng dụng tự làm mới, chỉ cần đọc lại token rồi gọi lại.
+- Route View trên deployment này là `/view-layout/{id}` (dưới context ứng dụng, ví dụ `/dash/view-layout/{id}`). `/v2/view-layout/{id}` trả 404. Đọc route thật từ ứng dụng thay vì đoán.
+
+**Đọc dữ liệu**
+
+- `.../tables/{tableId}/metadata/detail` chấp nhận **tableName** ở vị trí tableId. Response là `{lastDataUpdatedAt, columns:[{name,dataType,...}]}`.
+- `.../tables/list` chỉ trả `[{tableName}]`. Một database có thể có vài trăm bảng, nên lọc theo từ khóa.
+- `POST /visualization-app/api/v1/visualizations/raw-data/list` trả **mảng dòng ở cấp cao nhất**. `pageable.pageSize` **bị bỏ qua** (đã nhận đủ hơn 12.000 dòng dù xin 2.000). Vì vậy chỉ profile ngay trong trình duyệt và trả về tóm tắt, không đổ toàn bộ dòng ra ngoài.
+
+**Đọc layout**
+
+- Danh sách layout: `POST /visualization-app/api/v1/layouts/page` với body `{"keywords":"","pageable":{"pageSize":200,"pageNumber":0}}` → `{content:[{id,name,active,totalPages,totalCharts,public}], totalElements}`. `GET /layouts` trả 500.
+- `GET /layouts/tree?id=` trả cây đầy đủ, gồm cả group và children. Dùng để clone payload mẫu.
+
+**Ghi trang và layout**
+
+- **Tạo trang** — `PUT /layouts/tree/pages` → 201, trả trang với `id` thật cho trang, pageItem và chartInfo:
+
+  ```text
+  {layoutId, id:null, fakeId:"page-<ts>", title, pageIndex, databaseId, tableName,
+   cateDomainId:0, active:1, pageItems:[item...]}
+  ```
+
+  Item mới:
+
+  ```text
+  {type:"CHART", id:null, fakeId:"w-<ts>", x,y,w,h, chartId:null, key:null, url:"",
+   pageItemConfigs:{responsiveLayouts:{desktop:{x,y,w,h}}},
+   chartInfo:{cateDomainId, databaseId, tableName, name, chartTypeCode, chartConfigs, metadata, key:null}}
+  ```
+
+  `chartConfigs` không chứa databaseId/tableName; nguồn nằm ở chartInfo. Không gửi chartInfo.id cho widget mới.
+- **Cập nhật trang** — `PUT /layouts/tree/pages/{pageId}`:
+
+  ```text
+  {id, title, pageIndex, databaseId, tableName, cateDomainId, active, fakeId:null, pageItems}
+  ```
+
+  Mỗi item: `id` = pageItem.id, `chartId` = chartInfo.id, `key:null`. Gửi lại **toàn bộ** pageItems của trang; ID được giữ nguyên.
+- **Cập nhật layout** — `PUT /layouts/tree/{layoutId}` với `{id,name,active,isPublic,layoutConfigs}`, không kèm layoutPages. Các trang **không bị ảnh hưởng**. Đọc layoutConfigs mới nhất, chỉ thêm hoặc sửa key cần thiết, giữ nguyên `isPublic` hiện có.
+- **Xóa trang** — `DELETE /layouts/tree/pages/{pageId}` là **xóa cứng**: ngay sau đó trang trả 404 với thông báo không tồn tại. Không có cơ chế khôi phục; phải tạo lại từ snapshot.
+
+**Kiểm chứng**
+
+Hình dạng payload ở trên khớp với hàm `createPage`/`savePage` trong bundle frontend của deployment. Khi phiên bản khác, đọc lại bundle hoặc request do UI phát ra thay vì giả định.

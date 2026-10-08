@@ -80,9 +80,57 @@ Rule tĩnh tối thiểu trong KPI:
 
 Fragment này đặt trong `formatConfig.kpi`. Nếu không đỏ, kiểm val thực sau aggregate/filter và style override trước khi kết luận tính năng không hoạt động.
 
+### KPI: quan sát live (1.1.0)
+
+Các điểm sau đã kiểm bằng View trên deployment thật:
+
+- **Nhãn KPI.** Nhãn chỉ hiện khi có **element `type:"title"`** trong `formatConfig.kpi.elements`, **và** `formatConfig.header.show = true` kèm `header.text`.
+  - Bỏ element title thì mất nhãn, kể cả khi header.show = true.
+  - Đặt header.show = false thì cũng mất nhãn.
+  - Element title hiển thị text của header.
+- **Cấu trúc tối thiểu đã chạy:**
+
+  ```json
+  {"header":{"show":true,"text":"Kế hoạch vốn năm"},
+   "kpi":{"mainFilters":[],
+          "numberFormat":{"suffix":"tr.đ","decimals":"0","suffixStyle":{"color":"#64748b","fontSize":18}},
+          "elements":[
+            {"id":"el-title-1","show":true,"type":"title","style":{"color":"#475569","fontSize":20},"config":{"x":6,"y":12,"text":"Kế hoạch vốn năm"}},
+            {"id":"mainValue-1","show":true,"type":"mainValue","style":{"color":"#0f4c81","fontSize":38,"fontWeight":"bold"},"config":{"x":6,"y":50}}]}}
+  ```
+
+  `decimals` là chuỗi trong các payload mẫu. Toạ độ element trong config không có tác dụng rõ ràng trên layout mặc định.
+- **Chọn dòng tổng.** `kpi.mainFilters: [{"field":"Chỉ tiêu","value":"TỔNG CỘNG","operator":"eq"}]` dùng để chọn đúng dòng tổng trong bảng có lẫn dòng tổng và dòng chi tiết.
+- **KPI cộng mọi dòng sau lọc.** Bảng theo tháng phải được lọc kỳ, bằng slicer kèm `visualFilterValues`, nếu không KPI sẽ cộng cả năm.
+
+## Bố cục và mẫu payload (live)
+
+- Canvas desktop đã quan sát có hệ tọa độ thiết kế rộng khoảng **1920** (`x,y,w,h` tính bằng pixel). Dashboard chính thức dùng cỡ chữ lớn (24–40), vì hiển thị trên màn hình IOC.
+- Cách nhanh và an toàn nhất là clone pageItem thật cùng loại từ một dashboard đang chạy, rồi chỉ thay các phần sau:
+  - `xAxis`, `yAxis`, `groupBy`, `seriesTypes`
+  - `queryFilters`, `visualFilterValues`
+  - `formatConfig.header`, `sorting`
+  - `metadata.yaxisList`, `metadata.filterDataList`, `metadata.xaxis`
+  - vị trí `x,y,w,h` và `pageItemConfigs.responsiveLayouts.desktop`
+
+  Xóa `id`, `chartConfigs.groupId`, `chartConfigs.databaseId` và `chartConfigs.tableName` trước khi tạo.
+- **bar_horizontal** clone từ mẫu có chữ to sẽ bị chồng nhãn khi có hơn 10 category. Cách xử lý:
+  - tắt `dataLabels.show`;
+  - giảm `xAxis.fontSize` và `yAxis.fontSize` xuống khoảng 13–15.
+
 ## Table và matrix
 
 Table dựng cột từ `dataConfig.dimensions[].field` và `metrics[].field`, alias/name làm nhãn. Chỉ đặt xAxis/yAxis kiểu bar có thể không tạo cột table như mong đợi. `formatConfig.table` chứa columnConfigs/defaultColumnConfig, defaultSort, sticky/paging và nhiều tùy chọn; dùng UI/readback để giữ đúng field từng phiên bản. Table sort cục bộ không đồng nhất với format.sorting của chart.
+
+**Table: quan sát live (1.1.0)**
+
+- Đặt `xAxis` = danh sách cột vật lý, và `dimensions[] = {id,name,field,role:"row",type:"string"|"number",alias}`. `metrics: []`.
+- `formatConfig.table.columnConfigs` **key theo alias** (hoặc theo tên cột khi không có alias), ví dụ `{width:"200",decimals:2,formatAsNumber:true}`.
+- `defaultSort: {order:"desc", column:"<cột vật lý>"}`.
+- `pageSize` và `stickyColumns` chạy đúng.
+- Lọc dòng chi tiết bằng `queryFilters`: xem [data-and-filters.md](data-and-filters.md#bộ-lọc-cục-bộ-quan-sát-live).
+
+**Pie đếm số lượng:** `xAxis:[category]`, `yAxis:[cột định danh]`, `seriesTypes:{"<cột định danh>":"count"}`. Đã chạy đúng để đếm số đơn vị theo đánh giá.
 
 Matrix: dimensions role row/column chọn trục. Metric key ở consumer hiện lấy `alias || name`, fallback yAxis; phải khớp property thực trong dataset, không chỉ một nhãn đẹp tùy ý. Hai bản ghi trùng cùng row/column/metric bị ghi đè bằng dòng cuối, không tự sum. Chuẩn bị dataset có một giá trị cho mỗi ô hoặc xác minh API query đã aggregate, không chỉ chọn SUM trong UI và mặc định đúng.
 

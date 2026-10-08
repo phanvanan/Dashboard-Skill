@@ -2,7 +2,7 @@
 
 ## Phạm vi kiến thức
 
-- Skill: `pm6-dashboard-platform`, phiên bản gói 1.0.0.
+- Skill: `pm6-dashboard-platform`, phiên bản gói 1.1.0. Bản 1.0.0 được rút ra từ source; bản 1.1.0 bổ sung các quan sát trên deployment live và quy trình vận hành.
 - Source frontend: commit `834c199985a3dfbdad2c673438f7bf5ef8479006`, khảo sát 2026-10-08.
 - “PM6/IOC” là tên nhận diện nền tảng trong nhiệm vụ này, không phải tuyên bố một API chuẩn chung cho mọi sản phẩm IOC.
 - Không kèm source ứng dụng, source backend, thư viện riêng, credentials, URL server riêng hoặc dữ liệu khách hàng.
@@ -17,6 +17,33 @@ Môi trường cô lập dùng Vitest 2.1.9, Vite 5.4.21, React 18.3.1, ECharts 
 Các phát hiện bổ sung khi xây skill: header text khác widget title; KPI column comparison có cả UI lẫn runtime; main KPI nhiều yAxis cộng các aggregate; update page có contract riêng và chỉ active page; nguồn và sidecar khác giữa tạo mới/update. Chúng được đọc từ code, chưa nghiệm thu backend.
 
 Khi đóng gói, thêm 9 test với fixture của chính skill gọi code đã khảo sát: bar/combination values và màu, biên >100, raw request, biểu diễn filter, aggregate mẫu KPI, field mẫu table, serialize widget thành chartConfigs và khôi phục sidecar. Cả 9 pass trong môi trường cô lập. Test KPI/table ở đây chỉ xác minh hợp đồng dữ liệu/helper, không render React component. Gói còn được kiểm frontmatter, liên kết reference, JSON và khả năng chuyển thư mục; các kiểm này không thay thế một thử nghiệm AI khác tự thao tác hệ thống live.
+
+## Kiểm chứng live (1.1.0)
+
+Ngày 2026-10-08, skill được dùng để dựng một dashboard 4 trang, 34 widget (KPI, slicer, line, bar, bar_horizontal, pie, table) từ một họ output đầu tư công, trên một deployment PM6/IOC thật. Việc này dùng phiên trình duyệt đã đăng nhập và gọi API ngay trong page context. Bằng chứng gồm ba loại:
+
+- **Response API:** mã 201 hoặc 200, và ID thật trong response.
+- **Readback cây layout** sau mỗi lần ghi.
+- **Ảnh chụp View** của từng trang. Có đối chiếu số liệu: tổng các nguồn vốn bằng dòng tổng cộng; đổi kỳ ở slicer thì KPI trên các bảng được ánh xạ cũng thay đổi.
+
+Trong phiên, toàn bộ trang mới bị xóa bằng `DELETE /layouts/tree/pages/{id}`, ngay sau khi editor được mở lại và có thao tác trên thanh tab trang. Trang không khôi phục được (404), nên đã phải dựng lại bằng script. Bài học được ghi trong [operating-workflow.md](operating-workflow.md): snapshot trước khi ghi, tải lại editor, tách tab làm việc.
+
+Các quan sát chi tiết nằm trong ba file:
+
+- [persistence-api.md](persistence-api.md#quan-sát-trên-deployment-live)
+- [widget-contracts.md](widget-contracts.md)
+- [data-and-filters.md](data-and-filters.md#nối-slicer-với-widget-quan-sát-live)
+
+Gói không chứa host, ID, token hay dữ liệu của deployment đó.
+
+**Chưa kiểm:**
+
+- Mobile và tablet layout.
+- Portal.
+- Chia sẻ.
+- Combo chart.
+- Quy tắc tô màu có điều kiện của bảng.
+- Việc queryFilters có được đẩy xuống backend thành whereConditions ở luồng tương tác hay không.
 
 ## Bản đồ source cho người bảo trì
 
