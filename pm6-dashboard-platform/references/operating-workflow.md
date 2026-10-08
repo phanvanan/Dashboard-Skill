@@ -12,7 +12,7 @@ Quy trình này được rút ra từ một phiên dựng dashboard thật trên
 ## 1. Khám phá dữ liệu (chỉ đọc API)
 
 1. Xác định tiền tố API của deployment bằng một GET vô hại (`.../database/authorized-list`). Deployment đã kiểm dùng tiền tố `/api` trước tên service, xem [persistence-api.md](persistence-api.md#quan-sát-trên-deployment-live).
-2. Dùng phiên đăng nhập sẵn có trong trình duyệt của người dùng. Token nằm trong localStorage của ứng dụng và chỉ dùng trong page context. Không in token ra, không gửi token đi nơi khác.
+2. Dùng phiên đăng nhập sẵn có trong trình duyệt của người dùng, ngay trên tab người dùng đang mở. Token nằm trong localStorage của ứng dụng và chỉ dùng trong page context. Không in token ra, không gửi token đi nơi khác.
 3. Lấy danh sách bảng, lọc theo từ khóa của output. **Tên output người dùng nói có thể không tồn tại đúng như vậy.** Ví dụ người dùng nói một tên viết hoa, nhưng thực tế là một họ gồm nhiều bảng cùng tiền tố. Liệt kê các ứng viên, không tự chọn bừa.
 4. Với mỗi ứng viên: lấy metadata và `lastDataUpdatedAt`, rồi lấy mẫu dòng. Profile **ngay trong trình duyệt** và chỉ trả về bản tóm tắt: số dòng, số giá trị khác rỗng, số giá trị phân biệt, min/max, vài giá trị mẫu. Kết quả trả về của công cụ trình duyệt có thể bị cắt sau khoảng 1.000 ký tự, nên lưu chuỗi dài vào biến rồi đọc theo từng đoạn.
 5. Báo người dùng các điểm sau:
@@ -35,20 +35,23 @@ Quy trình này được rút ra từ một phiên dựng dashboard thật trên
 
 ## 3. Ghi theo từng trang
 
-Thực hiện tuần tự cho **mỗi trang**:
+Thực hiện tuần tự cho **mỗi trang**, tất cả trên tab người dùng đang mở:
 
-1. Chụp snapshot cây layout hiện tại (giữ trong biến của tab làm việc) để có thể khôi phục.
-2. `PUT /layouts/tree/pages` để tạo trang mới, kèm toàn bộ pageItems, theo [payload mẫu](../examples/create-page-payload.json).
-3. Đọc ID thật trong response. Sau đó `PUT /layouts/tree/pages/{pageId}` để gán `slicer.targetWidgetIds` bằng các pageItem.id (dạng chuỗi). Widget mới chưa có ID cho tới khi tạo xong, nên **luôn cần hai bước**.
-4. `PUT /layouts/tree/{layoutId}` để thêm `layoutConfigs.dimensions` cho các ánh xạ cột kỳ giữa các bảng. Đọc layoutConfigs mới nhất trước khi ghi, chỉ thêm key, giữ nguyên mọi key khác.
-5. Mở View ngay trên tab của người dùng, chụp màn hình và đối chiếu một vài con số với dữ liệu gốc.
-6. Gửi cập nhật cho người dùng, rồi mới sang trang tiếp theo.
+1. Nếu tab đã điều hướng hoặc tải lại kể từ lần trước, nạp lại đoạn script helper (hàm gọi API, hàm clone/build payload).
+2. Chụp snapshot cây layout hiện tại ngay trước khi ghi (giữ trong biến của tab; biến mất khi điều hướng, nên chụp lại trước mỗi lần ghi).
+3. `PUT /layouts/tree/pages` để tạo trang mới, kèm toàn bộ pageItems, theo [payload mẫu](../examples/create-page-payload.json).
+4. Đọc ID thật trong response. Sau đó `PUT /layouts/tree/pages/{pageId}` để gán `slicer.targetWidgetIds` bằng các pageItem.id (dạng chuỗi). Widget mới chưa có ID cho tới khi tạo xong, nên **luôn cần hai bước**.
+5. `PUT /layouts/tree/{layoutId}` để thêm `layoutConfigs.dimensions` cho các ánh xạ cột kỳ giữa các bảng. Đọc layoutConfigs mới nhất trước khi ghi, chỉ thêm key, giữ nguyên mọi key khác.
+6. Điều hướng chính tab đó sang View của layout, chọn trang vừa ghi, chụp màn hình và đối chiếu một vài con số với dữ liệu gốc.
+7. Gửi cập nhật cho người dùng, rồi mới sang trang tiếp theo (nạp lại helper trên trang View trước khi ghi tiếp).
 
 ## 4. Quy tắc tab và editor (bắt buộc)
 
-- **Tách tab:** gọi API trong một tab làm việc riêng (cùng origin, ví dụ trang danh sách layout). Tab của người dùng chỉ dùng để hiển thị kết quả. Lý do: điều hướng một tab sẽ xóa sạch biến và hàm JavaScript đã nạp trong tab đó. Báo cho người dùng biết có tab làm việc này.
+- **Một tab duy nhất:** mọi thao tác (gọi API, mở View, kiểm tra, chụp màn hình) làm trên tab người dùng đang mở. **Không mở bất kỳ tab riêng nào** (không tab làm việc, không tab View). Nếu tab chưa đủ điều kiện thì tải lại (F5) hoặc điều hướng ngay trên tab đó.
+- **Nạp lại helper sau mỗi lần điều hướng:** điều hướng hoặc tải lại xóa sạch biến và hàm JavaScript đã nạp. Giữ helper trong một đoạn script ngắn để nạp lại nhanh; đọc lại snapshot/template từ API khi cần thay vì dựa vào biến cũ. Chuyển trang con trong View (bấm tab trang) không xóa biến; điều hướng URL thì có.
 - **Editor cũ là nguy hiểm.** Một editor được mở *trước* khi ghi bằng API không biết về các trang mới. Khi đó, Lưu hoặc bất kỳ thao tác đồng bộ nào có thể ghi đè layoutConfigs hoặc xử lý sai các trang.
-  - Sau khi ghi bằng API: yêu cầu người dùng **tải lại (F5) editor** trước khi chỉnh tay.
+  - Tab đang là editor và cần ghi bằng API: ghi, rồi điều hướng tab sang View để kiểm tra; không bấm Lưu trên editor cũ.
+  - Xong việc: đưa tab về lại URL editor (tải lại mới) để người dùng chỉnh tiếp trên bản mới nhất.
   - Đang chỉnh trên editor: lưu xong rồi mới quay lại dùng API.
   - Không để API và editor cùng sửa một trang.
 - **Xóa trang là xóa cứng.** `DELETE /layouts/tree/pages/{id}` khiến trang trả 404 ngay sau đó, không có thùng rác. Trên editor, nút xóa trang nằm ngay cạnh thanh tab trang, nên khi bấm chuyển tab cần nhắm đúng chữ tên tab. Muốn khôi phục chỉ có cách tạo lại từ snapshot hoặc script.
@@ -72,7 +75,7 @@ Thực hiện tuần tự cho **mỗi trang**:
   - Danh sách trang và những con số đã đối chiếu.
   - Giả định nghiệp vụ: đơn vị tính, kỳ mặc định là giá trị cố định.
   - Những điểm dữ liệu cần người có nghiệp vụ kiểm tra.
-  - Lưu ý tải lại editor trước khi chỉnh.
+  - Tab đã được đưa về editor tải lại mới (hoặc nhắc tải lại trước khi chỉnh).
 
 ## 6. Khi nào dùng chuột
 
