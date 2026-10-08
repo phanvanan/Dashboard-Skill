@@ -2,7 +2,7 @@
 name: pm6-dashboard-platform
 description: Hiểu và thao tác nền tảng dashboard PM6/IOC mà không cần mã nguồn. Dùng khi người dùng yêu cầu vẽ, cấu hình hoặc chỉnh chart/dashboard/layout từ output như IOC_DAUTUCONG trên nền tảng này; cung cấp mô hình dữ liệu, cấu hình native, cơ chế lưu/View và giới hạn thực tế. Không thay thế công cụ BI khác hoặc tự xây website độc lập.
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
   source_revision: "834c199985a3dfbdad2c673438f7bf5ef8479006"
   reviewed_on: "2026-10-08"
   live_verified_on: "2026-10-08"
@@ -61,7 +61,7 @@ Không mặc định tạo HTML/React/ECharts độc lập để thay cho dashbo
    - Gửi cập nhật ngắn sau mỗi mốc.
    - Mở View cho người dùng xem ngay sau mỗi trang ghi xong.
    - Không làm im lặng nhiều phút liền.
-8. **Editor mở trước khi ghi bằng API là editor cũ.** Yêu cầu tải lại (F5) trước khi chỉnh tay hoặc bấm Lưu. Gọi API trong một tab làm việc riêng, vì điều hướng tab sẽ xóa sạch biến JavaScript. Xóa trang là xóa cứng, nên phải chụp snapshot cây layout trước mọi lần ghi.
+8. **Chỉ làm trên tab người dùng đang mở, không mở bất kỳ tab riêng nào.** Gọi API, mở View, chụp màn hình và kiểm tra đều làm trên chính tab đó. Nếu tab chưa đủ điều kiện (ví dụ đang là editor mở trước khi ghi bằng API, hoặc cần chuyển sang View) thì tải lại (F5) hoặc điều hướng ngay trên tab đó. Điều hướng/tải lại xóa sạch biến JavaScript, nên giữ các hàm helper trong một đoạn script nạp lại được và nạp lại sau mỗi lần điều hướng. Editor mở trước khi ghi bằng API là editor cũ: phải tải lại trước khi chỉnh tay hoặc bấm Lưu. Xóa trang là xóa cứng, nên phải chụp snapshot cây layout trước mọi lần ghi.
 9. **Chỉ nêu nguyên nhân sự cố khi có bằng chứng.** Ví dụ: nhật ký mạng, hoặc đọc lại dữ liệu sau sự cố. Nếu chưa có thì nói rõ là chưa biết.
 
 ## Xác nhận đầu ra theo phạm vi công việc
