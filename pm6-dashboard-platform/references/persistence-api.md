@@ -2,7 +2,7 @@
 
 ## Điều kiện dùng
 
-Các đường dẫn dưới đây được trích từ frontend, **không phải cam kết mọi server hiện tại giữ nguyên contract**. Ghép với base URL/context đúng của môi trường đã được người dùng cấp quyền. Dùng connector/API đã có hoặc phiên trình duyệt hợp lệ; không yêu cầu copy token vào chat, không dò filesystem/profile để lấy thông tin đăng nhập. Axios client của ứng dụng gắn Bearer web/embed, BaseService riêng chỉ cung cấp header JSON.
+Các đường dẫn dưới đây được trích từ frontend, **không phải cam kết mọi server hiện tại giữ nguyên contract**. Ghép với base URL/context đúng của môi trường đã được người dùng cấp quyền. Dùng connector/API đã có hoặc phiên trình duyệt hợp lệ trên tab người dùng đang mở; không yêu cầu copy token vào chat, không dò filesystem/profile để lấy thông tin đăng nhập. Axios client của ứng dụng gắn Bearer web/embed, BaseService riêng chỉ cung cấp header JSON.
 
 Nếu môi trường chỉ có browser UI, dùng [authoring-ui.md](authoring-ui.md). Không cần phát minh MCP server hoặc yêu cầu người dùng cài backend để dùng skill. Chỉ dùng API trực tiếp khi công cụ hiện có cho phép và contract đích đã được xác nhận bằng read/response, tài liệu hoặc request UI hợp lệ.
 
