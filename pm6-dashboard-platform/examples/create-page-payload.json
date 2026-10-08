@@ -1,0 +1,73 @@
+{
+  "_note": "Dữ liệu giả. Hình dạng body cho PUT /visualization-app/api/v1/layouts/tree/pages, đã kiểm trên deployment live 2026-10-08 (skill 1.1.0). formatConfig ở đây đã được rút gọn: khi làm thật, clone formatConfig đầy đủ từ một widget cùng loại đang chạy trên deployment, chỉ thay binding, filter, header và vị trí. Bước 2: sau khi tạo, đọc pageItem.id thật trong response rồi PUT /layouts/tree/pages/{pageId} để gán slicer.targetWidgetIds.",
+  "layoutId": "LAYOUT_ID",
+  "id": null,
+  "fakeId": "page-1790000000000",
+  "title": "Tổng quan",
+  "pageIndex": 1,
+  "databaseId": "DATABASE_ID",
+  "tableName": "OUTPUT_MONTHLY",
+  "cateDomainId": 0,
+  "active": 1,
+  "pageItems": [
+    {
+      "type": "CHART", "id": null, "fakeId": "w-1790000000000-1",
+      "x": 10, "y": 10, "w": 620, "h": 64,
+      "chartId": null, "key": null, "url": "",
+      "pageItemConfigs": {"responsiveLayouts": {"desktop": {"x": 10, "y": 10, "w": 620, "h": 64}}},
+      "chartInfo": {
+        "cateDomainId": 0, "databaseId": "DATABASE_ID", "tableName": "OUTPUT_MONTHLY",
+        "name": "", "chartTypeCode": "slicer", "key": null,
+        "chartConfigs": {
+          "xAxis": ["DATABASE_ID_OUTPUT_MONTHLY::period"], "yAxis": [], "groupBy": [], "seriesTypes": {},
+          "queryFilters": [], "visualFilterValues": {},
+          "formatConfig": {
+            "header": {"show": false, "text": ""},
+            "slicer": {
+              "labelPosition": "left", "targetWidgetIds": [],
+              "customFields": [{
+                "id": "DATABASE_ID_OUTPUT_MONTHLY::period", "label": "Kỳ báo cáo",
+                "comboSource": "multiTable", "controlType": "combobox",
+                "comboSources": [{"tableName": "OUTPUT_MONTHLY", "databaseId": "DATABASE_ID", "labelColumn": "period", "valueColumn": "period"}],
+                "defaultValue": ["2026-09"], "allowMultiple": false, "defaultOperator": "IN",
+                "comboLabelColumn": "period", "comboTargetColumn": ["period"]
+              }]
+            }
+          }
+        },
+        "metadata": {"noteDataList": {}, "attributes": {}, "filterDataList": [], "yaxisList": [],
+                     "coverageInformation": {"name": "", "lineType": "SOLID", "width": 0, "isShow": false},
+                     "xaxis": "DATABASE_ID_OUTPUT_MONTHLY::period"}
+      }
+    },
+    {
+      "type": "CHART", "id": null, "fakeId": "w-1790000000000-2",
+      "x": 10, "y": 90, "w": 305, "h": 160,
+      "chartId": null, "key": null, "url": "",
+      "pageItemConfigs": {"responsiveLayouts": {"desktop": {"x": 10, "y": 90, "w": 305, "h": 160}}},
+      "chartInfo": {
+        "cateDomainId": 0, "databaseId": "DATABASE_ID", "tableName": "OUTPUT_MONTHLY",
+        "name": "Kế hoạch vốn năm", "chartTypeCode": "kpi", "key": null,
+        "chartConfigs": {
+          "xAxis": [], "yAxis": ["plan_amount"], "groupBy": [], "seriesTypes": {}, "queryFilters": [],
+          "visualFilterValues": {"DATABASE_ID_OUTPUT_MONTHLY::period": {"values": ["2026-09"], "operator": "IN"}},
+          "formatConfig": {
+            "header": {"show": true, "text": "Kế hoạch vốn năm"},
+            "kpi": {
+              "mainFilters": [{"field": "row_type", "value": "TOTAL", "operator": "eq"}],
+              "numberFormat": {"suffix": "tr.đ", "decimals": "0"},
+              "elements": [
+                {"id": "el-title-1", "show": true, "type": "title", "style": {"color": "#475569", "fontSize": 20}, "config": {"x": 6, "y": 12, "text": "Kế hoạch vốn năm"}},
+                {"id": "mainValue-1", "show": true, "type": "mainValue", "style": {"color": "#0f4c81", "fontSize": 38, "fontWeight": "bold"}, "config": {"x": 6, "y": 50}}
+              ]
+            }
+          }
+        },
+        "metadata": {"noteDataList": {}, "attributes": {},
+                     "yaxisList": [{"fieldName": "plan_amount", "aggFunc": "sum"}],
+                     "filterDataList": [{"fieldName": "DATABASE_ID_OUTPUT_MONTHLY::period", "operator": "IN", "filterValue": "2026-09"}],
+                     "coverageInformation": {"name": "", "lineType": "SOLID", "width": 0, "isShow": false}}
+      }
+    }
+  ]
+}
