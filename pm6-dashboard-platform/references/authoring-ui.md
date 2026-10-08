@@ -1,6 +1,6 @@
 # Thao tác khi chỉ có nền tảng đang chạy
 
-Không cần mã nguồn. Dùng browser/app tool được host AI cho phép; quan sát UI hiện tại và label/accessibility thay vì tọa độ hoặc selector cứng. Không gọi API/công cụ giả định không tồn tại.
+Không cần mã nguồn. Dùng browser/app tool được host AI cho phép; quan sát UI hiện tại và label/accessibility thay vì tọa độ hoặc selector cứng. Không gọi API/công cụ giả định không tồn tại. Thao tác trên tab người dùng đang mở, không mở tab riêng.
 
 ## Tìm đúng bề mặt
 
@@ -39,6 +39,6 @@ Commit field đang gõ bằng hành vi UI bình thường (blur/Enter theo contr
 
 Với layout có nhiều trang, source hiện có đường chỉ lưu nội dung trang đang active, sau đó mới lưu metadata layout. Xác nhận đã lưu từng trang thay đổi; đừng dựa vào một toast duy nhất để nói cả dashboard đã lưu.
 
-Mở View bằng link thật sau lưu, kiểm những chart/filter/action đã tác động. Reload hoặc phiên View mới giúp phân biệt state editor/cache với persistence. Không tự đổi quyền/public để mở được View; lỗi quyền phải xử lý bằng quyền được cấp.
+Mở View bằng link thật sau lưu (điều hướng ngay trên tab đang mở), kiểm những chart/filter/action đã tác động. Reload hoặc phiên View mới giúp phân biệt state editor/cache với persistence. Không tự đổi quyền/public để mở được View; lỗi quyền phải xử lý bằng quyền được cấp.
 
 Khi không thể lưu hoặc View không khớp, giữ bản thiết kế/config và bằng chứng phần đã thực hiện; báo chính xác “đã cấu hình nhưng chưa xác minh View”, thay vì nói hoàn tất hoặc đổ lỗi backend không có bằng chứng.
