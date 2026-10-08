@@ -1,0 +1,172 @@
+{
+  "purpose": "Synthetic contract fragments only. Not real IOC_DAUTUCONG columns, not a dashboard template, not complete save payloads. Replace source IDs and bind verified physical fields before use.",
+  "rows": [
+    { "category": "A", "amount": 80, "threshold": 100, "period": "2026-08" },
+    { "category": "B", "amount": 120, "threshold": 100, "period": "2026-09" }
+  ],
+  "widgets": {
+    "bar": {
+      "id": "w-synthetic-bar",
+      "key": "w-synthetic-bar",
+      "realChartId": null,
+      "type": "bar",
+      "title": "Tên nội bộ ví dụ",
+      "dataConfig": {
+        "databaseId": "DATABASE_ID",
+        "tableName": "OUTPUT_NAME",
+        "xAxis": ["category"],
+        "yAxis": ["amount"],
+        "seriesTypes": { "amount": "sum" },
+        "yAxisAlias": { "amount": "Giá trị minh họa" },
+        "seriesColors": { "amount": "#2563eb" }
+      },
+      "formatConfig": {
+        "header": { "show": true, "text": "Tiêu đề hiển thị ví dụ" },
+        "sorting": { "sortBy": "category", "order": "asc" },
+        "bar": {
+          "colorByValue": true,
+          "colorPieces": [{ "gt": 100, "color": "#dc2626" }]
+        }
+      }
+    },
+    "combo": {
+      "id": "w-synthetic-combo",
+      "key": "w-synthetic-combo",
+      "realChartId": null,
+      "type": "combo",
+      "title": "Combo minh họa",
+      "dataConfig": {
+        "databaseId": "DATABASE_ID",
+        "tableName": "OUTPUT_NAME",
+        "xAxis": ["category"],
+        "yAxis": ["amount", "threshold"],
+        "seriesTypes": { "amount": "bar", "threshold": "line" },
+        "seriesAxes": { "amount": 0, "threshold": 0 },
+        "seriesColors": { "amount": "#2563eb", "threshold": "#64748b" }
+      },
+      "formatConfig": {
+        "header": { "show": true, "text": "Cột và đường tham chiếu minh họa" },
+        "activeSeriesKey": "amount",
+        "sorting": { "sortBy": "category", "order": "asc" },
+        "seriesFormat": {
+          "amount": {
+            "bar": {
+              "colorByValue": true,
+              "colorPieces": [{ "gt": 100, "color": "#dc2626" }]
+            }
+          }
+        }
+      }
+    },
+    "kpi": {
+      "id": "w-synthetic-kpi",
+      "key": "w-synthetic-kpi",
+      "realChartId": null,
+      "type": "kpi",
+      "title": "KPI minh họa",
+      "dataConfig": {
+        "databaseId": "DATABASE_ID",
+        "tableName": "OUTPUT_NAME",
+        "yAxis": ["amount"]
+      },
+      "formatConfig": {
+        "kpi": {
+          "layout": "standard",
+          "title": "Giá trị minh họa",
+          "valueAggregation": "sum",
+          "numberFormat": { "decimals": 0 },
+          "conditionalFormatting": {
+            "enabled": true,
+            "rules": [
+              { "id": "above-limit", "operator": "gt", "value": 100, "color": "#dc2626" }
+            ]
+          }
+        }
+      }
+    },
+    "table": {
+      "id": "w-synthetic-table",
+      "key": "w-synthetic-table",
+      "realChartId": null,
+      "type": "table",
+      "title": "Bảng minh họa",
+      "dataConfig": {
+        "databaseId": "DATABASE_ID",
+        "tableName": "OUTPUT_NAME",
+        "dimensions": [
+          { "id": "category", "name": "Nhóm", "field": "category", "type": "string" },
+          { "id": "period", "name": "Kỳ", "field": "period", "type": "string" }
+        ],
+        "metrics": [
+          { "id": "amount", "name": "Giá trị", "field": "amount", "aggregation": "sum" }
+        ]
+      },
+      "formatConfig": {
+        "header": { "show": true, "text": "Bảng dữ liệu minh họa" }
+      }
+    },
+    "slicer": {
+      "id": "w-synthetic-slicer",
+      "key": "w-synthetic-slicer",
+      "realChartId": null,
+      "type": "slicer",
+      "title": "Bộ lọc minh họa",
+      "dataConfig": {
+        "databaseId": "DATABASE_ID",
+        "tableName": "OUTPUT_NAME",
+        "xAxis": ["period"]
+      },
+      "formatConfig": {
+        "slicer": {
+          "scope": "page",
+          "filterMode": "onChange",
+          "customFields": [
+            {
+              "id": "period",
+              "label": "Kỳ minh họa",
+              "controlType": "combobox",
+              "comboSource": "table",
+              "comboTargetColumn": ["period"],
+              "comboLabelColumn": "period",
+              "allowMultiple": false
+            }
+          ]
+        }
+      }
+    }
+  },
+  "kpiColumnComparisonRule": {
+    "id": "above-column",
+    "operator": "gt",
+    "valueType": "column",
+    "compareField": "threshold",
+    "compareAggregation": "max",
+    "color": "#dc2626"
+  },
+  "rawReadRequest": {
+    "keywords": "",
+    "pageable": { "pageSize": 20, "pageNumber": 0 },
+    "sorts": [],
+    "databaseId": "DATABASE_ID",
+    "tableName": "OUTPUT_NAME",
+    "querySpec": {
+      "dimensions": ["category", "amount"],
+      "aggregateFields": [],
+      "whereConditions": []
+    }
+  },
+  "queryFilterFragment": {
+    "queryFilters": [{ "field": "period", "operator": "in", "value": ["2026-09"] }]
+  },
+  "runtimeFilterFragment": {
+    "period": { "operator": "IN", "values": ["2026-09"] }
+  },
+  "desktopRectangleFragment": { "x": 24, "y": 80, "w": 560, "h": 320 },
+  "responsiveItemConfigFragment": {
+    "visibility": { "desktop": true, "tablet": true, "mobile": true },
+    "responsiveLayouts": {
+      "tablet": { "order": 0, "colSpan": 6, "height": 320 },
+      "mobile": { "order": 0, "colSpan": 12, "height": 320 }
+    }
+  }
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "PM6 Dashboard Platform"
+  short_description: "Kiến thức nền tảng PM6/IOC, không cần mã nguồn"
+  default_prompt: "Dùng $pm6-dashboard-platform để thiết kế dashboard từ output IOC_DAUTUCONG trên nền tảng được cấp quyền."
