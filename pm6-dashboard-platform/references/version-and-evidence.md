@@ -2,7 +2,7 @@
 
 ## Phạm vi kiến thức
 
-- Skill: `pm6-dashboard-platform`, phiên bản gói 1.1.0. Bản 1.0.0 được rút ra từ source; bản 1.1.0 bổ sung các quan sát trên deployment live và quy trình vận hành.
+- Skill: `pm6-dashboard-platform`, phiên bản gói 1.1.1. Bản 1.0.0 được rút ra từ source; bản 1.1.0 bổ sung các quan sát trên deployment live và quy trình vận hành; bản 1.1.1 thay quy tắc “tab làm việc riêng” bằng “mọi thao tác trên tab người dùng đang mở, không mở tab riêng”.
 - Source frontend: commit `834c199985a3dfbdad2c673438f7bf5ef8479006`, khảo sát 2026-10-08.
 - “PM6/IOC” là tên nhận diện nền tảng trong nhiệm vụ này, không phải tuyên bố một API chuẩn chung cho mọi sản phẩm IOC.
 - Không kèm source ứng dụng, source backend, thư viện riêng, credentials, URL server riêng hoặc dữ liệu khách hàng.
@@ -26,7 +26,7 @@ Ngày 2026-10-08, skill được dùng để dựng một dashboard 4 trang, 34 
 - **Readback cây layout** sau mỗi lần ghi.
 - **Ảnh chụp View** của từng trang. Có đối chiếu số liệu: tổng các nguồn vốn bằng dòng tổng cộng; đổi kỳ ở slicer thì KPI trên các bảng được ánh xạ cũng thay đổi.
 
-Trong phiên, toàn bộ trang mới bị xóa bằng `DELETE /layouts/tree/pages/{id}`, ngay sau khi editor được mở lại và có thao tác trên thanh tab trang. Trang không khôi phục được (404), nên đã phải dựng lại bằng script. Bài học được ghi trong [operating-workflow.md](operating-workflow.md): snapshot trước khi ghi, tải lại editor, tách tab làm việc.
+Trong phiên, toàn bộ trang mới bị xóa bằng `DELETE /layouts/tree/pages/{id}`, ngay sau khi editor được mở lại và có thao tác trên thanh tab trang. Trang không khôi phục được (404), nên đã phải dựng lại bằng script. Bài học được ghi trong [operating-workflow.md](operating-workflow.md): snapshot trước khi ghi, tải lại editor, làm trên một tab duy nhất và nạp lại helper sau mỗi lần điều hướng.
 
 Các quan sát chi tiết nằm trong ba file:
 
